@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace wozeduasync
 {
@@ -6,12 +7,18 @@ namespace wozeduasync
     {
         static void Main(string[] args)
         { 
-            DoNothingAsync(); 
+            Task<int> task = Return10Async(); 
+            Console.WriteLine(task.Result); 
         }
 
 // Warning CS1998 is about a method with no awaits in… exactly what we’re trying to 
 // achieve! 
 #pragma warning disable 1998
+        private static async Task<int> Return10Async() 
+        { 
+            return 10; 
+        }
+
         // Return type of void, Task or Task<int> 
         private static async void DoNothingAsync()
         {
@@ -68,14 +75,47 @@ namespace System.Runtime.CompilerServices
 
     public struct AsyncTaskMethodBuilder<T> 
     { 
-        public static AsyncTaskMethodBuilder<T> Create() 
+        public Task<T> Task => _source.Task;
+
+        private readonly TaskCompletionSource<T> _source;
+
+        private AsyncTaskMethodBuilder(TaskCompletionSource<T> source) 
         { 
-            return new AsyncTaskMethodBuilder<T>(); 
+            _source = source; 
         }
 
-        public void SetException(Exception e) {} 
-        public void SetResult(T result) {} 
-        public Task<T> Task { get { return null; } } 
-    } 
+        public static AsyncTaskMethodBuilder<T> Create() 
+        { 
+            return new AsyncTaskMethodBuilder<T>(new TaskCompletionSource<T>()); 
+        }
+
+        public void SetException(Exception e) 
+        { 
+            _source.SetException(e); 
+        }
+
+        public void SetResult(T result) 
+        { 
+            _source.SetResult(result); 
+        }
+
+        public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
+            where TAwaiter : INotifyCompletion where TStateMachine : IAsyncStateMachine
+        {
+        }
+
+        public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
+            where TAwaiter : ICriticalNotifyCompletion where TStateMachine : IAsyncStateMachine
+        {
+        }
+
+        public void SetStateMachine(IAsyncStateMachine stateMachine)
+        {
+        }
+
+        public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
+        {
+        }
+    }
 }
 #pragma warning restore CS0436 // Type conflicts with imported type
