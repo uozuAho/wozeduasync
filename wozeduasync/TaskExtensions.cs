@@ -18,7 +18,6 @@ namespace System.Runtime.CompilerServices
             internal TaskAwaiter(Task<T> task) 
             { 
                 _task = task;
-                Console.WriteLine("yo dawg");
             }
 
             public void OnCompleted(Action action) 
